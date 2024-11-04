@@ -2,28 +2,11 @@
 
 **ESVO** is a novel pipeline for real-time visual odometry using a stereo event-based camera. Both the proposed mapping and tracking methods leverage a unified event representation (Time Surfaces), thus, it could be regarded as a ''direct'', geometric method using raw event as input.
 
-Please refer to the **[ESVO Project Page](https://sites.google.com/view/esvo-project-page/home)** for more detailed information and for testing event data.
 
-**Videos**
-
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/3CPPs1gz04k/mqdefault.jpg)](https://www.youtube.com/watch?v=3CPPs1gz04k) &nbsp;&nbsp; 
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/NByVeO4Ss5o/mqdefault.jpg)](https://www.youtube.com/watch?v=NByVeO4Ss5o)
-
-### Related Publications
-
-* **[Event-based Stereo Visual Odometry](https://arxiv.org/abs/2007.15548)**, *Yi Zhou, Guillermo Gallego, Shaojie Shen*, IEEE Transactions on Robotics (T-RO) 2021.
-
-* **[Semi-dense 3D Reconstruction with a Stereo Event Camera](https://arxiv.org/abs/1807.07429)**, *Yi Zhou, Guillermo Gallego, Henri Rebecq, Laurent Kneip, Hongdong Li, Davide Scaramuzza*, ECCV 2018.
 
 
 # 1. Installation
-
-We have tested ESVO on machines with the following configurations
-* Ubuntu 18.04.5 LTS + ROS melodic + gcc 5.5.0 + cmake (>=3.10) + OpenCV 3.2
-* Ubuntu 16.04 LTS + ROS kinetic + gcc 5.4.0 + cmake (>=3.10) + OpenCV 3.2
 * Ubuntu 20.04 LTS + ROS Noetic + OpenCV 4
-
-For Ubuntu 16.04, you may need to upgrade your cmake.
 
 ## 1.1 Driver Installation
 
@@ -234,21 +217,10 @@ The event data fed to ESVO needs to be recorded at remarkbly higher streaming ra
 
 For convenience we provide a number of bag files, which have been rewritten to meet above requirement. They can be downloaded from the [ESVO Project Page](https://sites.google.com/view/esvo-project-page/home).
 
-# 6. License
-ESVO is licensed under the GNU General Public License Version 3 (GPLv3), see http://www.gnu.org/licenses/gpl.html.
 
-For commercial use, please contact Yi Zhou and Shaojie Shen. 
 
-Email addresses are available in the project page.
+### References
 
-# 7. Log
-* **12/01/2021** Merge with Suman Ghosh's pull request. 
-This commit fixed the running issue on machines with **Ubuntu 20.04 + ROS Noetic + OpenCV 4**.
-* **28/01/2021** We provide the independent mapping module of ESVO. 
-This module maybe useful for people who are interested in event-based multi-view stereo (MVS) methods,
-which typically assume poses are known as prior knowledge.
-Besides, methods in [26], [45] are also implemented for comparison purpose.
-Please refer to `2.3 esvo_core/mvstereo`. 
-* **23/02/2021** ESVO was integrated into the modular iniVation DV software platform. 
-It runs at up to 200 fps on Jetson TX2, and is fully open-source. 
-Download here: https://lnkd.in/deuRKSK.
+* **[Event-based Stereo Visual Odometry](https://arxiv.org/abs/2007.15548)**, *Yi Zhou, Guillermo Gallego, Shaojie Shen*, IEEE Transactions on Robotics (T-RO) 2021.
+
+* **[Semi-dense 3D Reconstruction with a Stereo Event Camera](https://arxiv.org/abs/1807.07429)**, *Yi Zhou, Guillermo Gallego, Henri Rebecq, Laurent Kneip, Hongdong Li, Davide Scaramuzza*, ECCV 2018.
