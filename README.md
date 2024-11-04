@@ -10,22 +10,39 @@
 
 ## 1.1 Driver Installation
 
-To work with event cameras, especially for the Dynamic Vision Sensors (DVS/DAVIS), you need to install some drivers. Please follow the instructions (steps 1-9) at [rpg_dvs_ros](https://github.com/uzh-rpg/rpg_dvs_ros) before moving on to the next step. Note that you need to replace the name of the ROS distribution with the one installed on your computer.
+Reference at [rpg_dvs_ros](https://github.com/uzh-rpg/rpg_dvs_ros). Do the steps below before moving on to the next step. 
 
-We use catkin tools to build the code. You should have it installed during the driver installation.
-
+	$ sudo apt-get install ros-noetic-camera-info-manager
+ 	$ sudo apt-get install ros-noetic-image-view
+	$ sudo add-apt-repository ppa:inivation-ppa/inivation
+	$ sudo apt-get update
+	$ sudo apt-get install libcaer-dev
+	$ sudo apt-get install python3-catkin-tools
+ 	$ mkdir -p catkin_ws/src
+	$ cd catkin_ws
+ 	$ catkin config --init --mkdirs --extend /opt/ros/noetic --merge-devel --cmake-args -DCMAKE_BUILD_TYPE=Release
+  	$ cd src
+	$ git clone https://github.com/catkin/catkin_simple.git
+ 	$ git clone https://github.com/uzh-rpg/rpg_dvs_ros.git
+	$ cd ..
+ 	$ conda create --name AEvIA python=3.8
+  	$ conda activate AEvIA
+   	$ pip3 install pyyaml
+	$ pip install rospkg
+	$ pip install empy==3.3.4
+	$ catkin build
+  
 ## 1.2 Dependencies Installation
 
 You should have created a catkin workspace in Section 1.1. If not, please go back and create one.
 
 **Clone this repository** into the `src` folder of your catkin workspace.
 
-	$ cd ~/catkin_ws/src 
+	$ cd src 
 	$ git clone https://github.com/HKUST-Aerial-Robotics/ESVO.git
 
 Dependencies are specified in the file [dependencies.yaml](dependencies.yaml). They can be installed with the following commands from the `src` folder of your catkin workspace:
 
-	$ cd ~/catkin_ws/src
 	$ sudo apt-get install python3-vcstool
 	$ vcs-import < ESVO/dependencies.yaml
 
@@ -41,23 +58,16 @@ Please refer to https://askubuntu.com/a/269423 for details.
 
 **yaml-cpp** is only used for loading calibration parameters from yaml files:
 
-	$ cd ~/catkin_ws/src 
 	$ git clone https://github.com/jbeder/yaml-cpp.git
 	$ cd yaml-cpp
 	$ mkdir build && cd build && cmake -DYAML_BUILD_SHARED_LIBS=ON ..
-	$ make -j
+	$ make -j18
 
 Other ROS dependencies should have been installed in Section 1.1. 
 If not by accident, install the missing ones accordingly.
 Besides, you also need to have `OpenCV` (3.2 or later) and `Eigen 3` installed.
 
 ## 1.3 ESVO Installation
-
-After cloning this repository, as stated above (reminder)
-
-	$ cd ~/catkin_ws/src 
-	$ git clone https://github.com/HKUST-Aerial-Robotics/ESVO.git
-	
 run
 
 	$ catkin build esvo_time_surface esvo_core
@@ -91,21 +101,7 @@ To save trajectories at anytime, go to another terminal and terminate the system
     
 You need to set the path in `/cfg/tracking_xxx.yaml` to which the result file will be saved.
 
-## 2.3 esvo_core/mvstereo
-This module implements the mapper of ESVO and some other event-based mapping methods (e.g. [26], [45]).
-As a multi-view stereo (MVS) pipeline, it assumes that poses are known as prior.
-To launch the mapper, run
-
-    $ roslaunch esvo_core mvstereo_xxx.launch
-
-This will launch two *esvo_time_surface nodes* (for left and right event cameras, respectively), and the mapping node simultaneously.
-Then play the input (already downloaded) bag file by running
-    
-    $ roslaunch esvo_time_surface [bag_name].launch
-
-Note that only *rpg* and *upenn* datasets are applicable for this module because they come with the ground truth poses.
-
-# 3. Parameters (Dynamic Reconfigure)
+# 3. Parameters for Time Surface
 ## Time Surface
 - `use_sim_time `: Set `True` for all offline experiments, which use 
 simulation time. 
@@ -120,69 +116,6 @@ for denoising the time surface.
 - `max_event_queue_len `: Determines the length of the event queue 
 maintained at each coordinate.
 
-## Mapping
-**Event Matching**
-- `EM_Slice_Thickness`: Determines the thickness of the temporal slice (unit: sec).
-- `EM_Time_THRESHOLD`: Temporal simultaneity threshold.
-- `EM_EPIPOLAR_THRESHOLD`: Epipolar constraint threshold.
-- `EM_TS_NCC_THRESHOLD`: Motion consistency threshold.
-- `EM_NUM_EVENT_MATCHING`: Maximum number of events for event matching.
-
-**Block Matching**
-- `BM_half_slice_thickness` : Determines the thickness of the temporal slice (unit: sec).
-- `BM_min_disparity` : Minimum searching distance for epipolar matching.
-- `BM_max_disparity` : Maximum searching distance for epipolar matching.
-- `BM_step` : Epipolar searching interval.
-- `BM_ZNCC_Threshold` : ZNCC-based matching threshold.
-- `BM_bUpDownConfiguration` : A flag that indicates the direction of the stereo baseline (True: up-down; False: left-right).
-- `bSmoothTimeSurface` : To smooth the time surfaces or not.
-
-**Non-linear Optimization parameters**
-- `invDepth_min_range` : Lower bound for the resulting inverse depth.
-- `invDepth_max_range` : Upper bound for the resulting inverse depth.
-- `residual_vis_threshold` : Threshold on the temporal residual of the inverse depth estimates.
-- `stdVar_vis_threshold` : Threshold on the uncertainty of the inverse depth estimates.
-- `age_vis_threshold` : Threshold on the number of fusion operations (inverse depth estimates).
-- `age_max_range` : Upper bound for the age (used for visualization only). 
-- `fusion_radius` : Determines the number of pixels that are involved in the depth fusion.
-- `FUSION_STRATEGY` : Fusion strategy. (use CONST_FRAMES or CONST_POINTS)
-- `maxNumFusionFrames` : Determines how many frames (observations) are fused to the current time. (used in CONST_FRAMES mode)
-- `maxNumFusionPoints` : Determines how many points are fused to the current time. (used in CONST_POINTS mode)
-- `Denoising` : This operation helps to denoise events that are induced by reflection of VICON. Set `True` to use.
-- `Regularization` : Perform regularization on the resulting inverse depth map.
-- `PROCESS_EVENT_NUM` : Maximum number of depth estimates performed at every observation.
-- `TS_HISTORY_LENGTH` : The number of time surfaces maintained.
-- `INIT_SGM_DP_NUM_THRESHOLD` : Minimum number of depth points needed from SGM-based initialization.
-- `mapping_rate_hz` : Updating rate of the mapping node.
-- `patch_size_X` : Size of patches on the time surface (x dimension).
-- `patch_size_Y` : Size of patches on the time surface (y dimension).
-- `LSnorm` : Least squares method choice (use l2 or Tdist).
-- `Tdist_nu` : Parameter of the applied Student's t distribution.
-- `Tdist_scale` : Parameter of the applied Student's t distribution.
-- `Tdist_stdvar` : Parameter of the applied Student's t distribution.
-- `bVisualizeGlobalPC` : Set `True` to visualize global pointcloud.
-- `visualizeGPC_interval` : Time interval to push new points to global pointcloud.
-- `NumGPC_added_oper_refresh` : Number of points pushed to global pointcloud.
-
-## Tracking
-- `invDepth_min_range` : Lower bound for the depth of input pointcoud. (Used for visualization only).
-- `invDepth_max_range` : Upper bound for the depth of input pointcoud. (Used for visualization only).
-- `TS_HISTORY_LENGTH` : The number of time surfaces maintained.
-- `REF_HISTORY_LENGTH` : The number of reference local maps maintained.
-- `tracking_rate_hz` : Updating rate of the tracking node.
-- `patch_size_X` : Size of patches on the time surface (x dimension).
-- `patch_size_Y` : Size of patches on the time surface (y dimension).
-- `kernelSize` : Kernel size for smoothing the negative time surface.
-- `MAX_REGISTRATION_POINTS` : Maximum number of 3D points that are involved in the 3D-2D registration.
-- `BATCH_SIZE` : Number of 3D points used in each iteration.
-- `MAX_ITERATION` : Maximum number of iterations.
-- `LSnorm` : Choice of Least-squares method. (use Huber or l2)
-- `huber_threshold` : Huber norm parameter.
-- `MIN_NUM_EVENTS` : Threshold on the number of events occurred since the last observation. This one is used to check if enough stimuli are perceived by the event camera.
-- `RegProblemType `: Jacobian computation manner (`0` numerical; `1` analytical).
-- `SAVE_TRAJECTORY` : Set `True` to save trajectory.
-- `SEQUENCE_NAME` : Assign it when saving the trajectory.
-- `VISUALIZE_TRAJECTORY` : Set `True` to visualize path.
 
 
 # 4. Notes for Good Results
