@@ -67,6 +67,7 @@ void TimeSurface::createTimeSurfaceAtTime(const ros::Time& external_sync_time)
     for(int x=0; x<sensor_size_.width; ++x)
     {
       dvs_msgs::Event most_recent_event_at_coordXY_before_T;
+      // Here to the get MostRecentEvent from  Event Queue !!!!!
       if(pEventQueueMat_->getMostRecentEventBeforeT(x, y, external_sync_time, &most_recent_event_at_coordXY_before_T))
       {
         const ros::Time& most_recent_stamp_at_coordXY = most_recent_event_at_coordXY_before_T.ts;
@@ -293,7 +294,7 @@ void TimeSurface::thread(Job &job)
 void TimeSurface::syncCallback(const std_msgs::TimeConstPtr& msg)
 {
   if(bUse_Sim_Time_)
-    sync_time_ = ros::Time::now();
+    sync_time_ = ros::Time::now();  // use_sim_time for trigger
   else
     sync_time_ = msg->data;
 
