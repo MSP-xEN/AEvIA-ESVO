@@ -152,6 +152,7 @@ For convenience we provide a number of bag files, which have been rewritten to m
 
 # 6. Read rosbag under conda
 Install the following package under the AEvIA conda environment.
+
 	$ pip install rospkg catkin-tools
 	$ pip install pycryptodomex
 	$ pip install gnupg
