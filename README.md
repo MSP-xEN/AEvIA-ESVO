@@ -150,7 +150,10 @@ The event data fed to ESVO needs to be recorded at remarkbly higher streaming ra
 
 For convenience we provide a number of bag files, which have been rewritten to meet above requirement. They can be downloaded from the [ESVO Project Page](https://sites.google.com/view/esvo-project-page/home).
 
-
+# 6. Read rosbag under conda
+	$ pip install rospkg catkin-tools
+	$ pip install pycryptodomex
+	$ pip install gnupg
 
 ### References
 
