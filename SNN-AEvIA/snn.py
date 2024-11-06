@@ -161,17 +161,17 @@ def read_dvs_events(bag_path, timestep=0.010):
         # Close the bag after processing
         bag.close()
 
-    # Plotting the Q-values over time
-    print("plotting")
-    plt.figure(figsize=(10, 5))
-    plt.plot(timestamps, q_values, label="Q-values")
-    plt.plot(timestamps, non_zero_sums, label="Non-Zero Sum")
-    # plt.plot(timestamps, activities, label="Acticities")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Q-value")
-    plt.title("DSQN Q-values over Time")
-    plt.legend()
-    plt.show()
+    # # Plotting the Q-values over time
+    # print("plotting")
+    # plt.figure(figsize=(10, 5))
+    # plt.plot(timestamps, q_values, label="Q-values")
+    # plt.plot(timestamps, non_zero_sums, label="Non-Zero Sum")
+    # # plt.plot(timestamps, activities, label="Acticities")
+    # plt.xlabel("Time (s)")
+    # plt.ylabel("Q-value")
+    # plt.title("DSQN Q-values over Time")
+    # plt.legend()
+    # plt.show()
 
 # Path to your ROS bag file
 bag_file_path = '/home/frankxcr/S-AEvIA/Datasets/upenn/indoor_flying1_edited.bag'
