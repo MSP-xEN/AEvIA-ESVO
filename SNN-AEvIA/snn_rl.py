@@ -133,6 +133,7 @@ class QLearningAgent:
         # Compute Q(s, a) using policy network
         actions = actions.to(self.device)
         q_values = self.policy_net(states).gather(1, actions.unsqueeze(1)).squeeze()
+        print(q_values)
         functional.reset_net(self.policy_net)
 
         # Compute the target Q values with the target network
@@ -183,7 +184,7 @@ def read_dvs_events_with_q_learning(bag_path, num_episodes=100, target_update_fr
 
             for event in msg.events:
                 event_time = event.ts.to_sec()
-                if current_time - init_time > 5:
+                if current_time - init_time > 0.1:
                     done = True
                     break
 
@@ -197,16 +198,11 @@ def read_dvs_events_with_q_learning(bag_path, num_episodes=100, target_update_fr
                     actions.append(action)
                     # Placeholder for reward function
                     if action == 0:
-                        reward = last_activity * 0.8
+                        reward = 0
                     else:
-                        reward = activity
-                        last_activity = activity
-                        if(last_action1 - current_time < 0.005):
-                            reward = 0
+                        reward = 1
                     activity = 0
 
-                    if action == 1:
-                        last_action1 = current_time
                     # Update the next state
                     next_state = spike_tensor.clone()
 
