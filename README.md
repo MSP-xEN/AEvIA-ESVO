@@ -159,6 +159,7 @@ Install the following package under the AEvIA conda environment.
 
 # 7. Computation of Jacobian G
 Study the following function to get Hessian Matrix J^TJ
+
 	computeJ_G(Eigen::Matrix<double,6,1>::Zero(), J_G_0_); // This is the Jacobian Computation, publish it for python to receive
 
 ### References
