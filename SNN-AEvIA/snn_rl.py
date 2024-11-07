@@ -3,6 +3,8 @@ from collections import deque
 import torch.optim as optim
 import rosbag
 from dvs_msgs.msg import EventArray
+from sensor_msgs.msg import CameraInfo
+from sensor_msgs.msg import Image
 import torch
 from spikingjelly.activation_based import layer, neuron, surrogate
 from spikingjelly.activation_based import functional
@@ -10,6 +12,27 @@ import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
+
+from std_msgs.msg import Time
+import rospy
+from rosgraph_msgs.msg import Clock
+clock_pub = rospy.Publisher('/clock', Clock, queue_size=10)
+
+# Initialize ROS node (assuming it hasn't been initialized yet)
+# Set use_sim_time to true
+
+if not rospy.core.is_initialized():
+    rospy.init_node("dvs_event_processor")
+
+rospy.set_param('/use_sim_time', True)
+# Set up publishers
+left_event_pub = rospy.Publisher('/davis/left/events', EventArray, queue_size=10000)
+right_event_pub = rospy.Publisher('/davis/right/events', EventArray, queue_size=10000)
+left_image_pub = rospy.Publisher('/davis/left/image_raw', Image, queue_size=10000)
+right_image_pub = rospy.Publisher('/davis/right/image_raw', Image, queue_size=10000)
+left_info_pub = rospy.Publisher('/davis/left/camera_info', CameraInfo, queue_size=10000)
+right_info_pub = rospy.Publisher('/davis/right/camera_info', CameraInfo, queue_size=10000)
+sync_pub = rospy.Publisher('/sync', Time, queue_size=100)
 
 
 
@@ -35,7 +58,7 @@ class DSQN(nn.Module):
 
         functional.set_step_mode(self.network, step_mode='m')
         if use_cuda:
-            functional.set_backend(self.network, backend='torch')
+            functional.set_backend(self.network, backend='cupy')
         # Initialize weights to all ones
         # self.initialize_weights()
 
@@ -133,7 +156,7 @@ class QLearningAgent:
         # Compute Q(s, a) using policy network
         actions = actions.to(self.device)
         q_values = self.policy_net(states).gather(1, actions.unsqueeze(1)).squeeze()
-        print(q_values)
+        # print(q_values)
         functional.reset_net(self.policy_net)
 
         # Compute the target Q values with the target network
@@ -160,7 +183,7 @@ class QLearningAgent:
 agent = QLearningAgent(policy_net, target_net, batch_size=2)
 
 # Modify the DVS event reading function to include Q-learning
-def read_dvs_events_with_q_learning(bag_path, num_episodes=100, target_update_freq=10, timestep=0.1):
+def read_dvs_events_with_q_learning(bag_path, num_episodes=1, target_update_freq=10, timestep=0.1):
     bag = rosbag.Bag(bag_path, 'r')
     spike_tensor = torch.zeros((101, 1, 1, height, width), dtype=torch.float32).to(device)
     last_activity = 0
@@ -177,54 +200,79 @@ def read_dvs_events_with_q_learning(bag_path, num_episodes=100, target_update_fr
         episode_rewards = 0
         actions = []
         last_action1 = 0
-        for topic, msg, t in bag.read_messages(topics=['/davis/left/events']):
+        for topic, msg, t in bag.read_messages(topics=['/davis/left/events', '/davis/right/events', '/davis/left/image_raw', '/davis/right/image_raw', '/davis/left/camera_info', '/davis/right/camera_info']):
             if current_time is None:
                 current_time = t.to_sec()
                 init_time = current_time
 
-            for event in msg.events:
-                event_time = event.ts.to_sec()
-                if current_time - init_time > 0.1:
-                    done = True
+            # Publish /clock to simulate time progression
+            sim_time = t
+            clock_msg = Clock()
+            clock_msg.clock = sim_time
+            clock_pub.publish(clock_msg)
+
+            # Publish the events message and sync message
+            if topic == '/davis/left/events':
+                left_event_pub.publish(msg)  # Publish left events
+            elif topic == '/davis/right/events':
+                right_event_pub.publish(msg)  # Publish right events
+            elif topic == '/davis/left/image_raw':
+                left_image_pub.publish(msg)  # Publish right events
+            elif topic == '/davis/right/image_raw':
+                right_image_pub.publish(msg)  # Publish right events
+            elif topic == '/davis/left/camera_info':
+                left_info_pub.publish(msg)  # Publish right events
+            elif topic == '/davis/right/camera_info':
+                right_info_pub.publish(msg)  # Publish right events
+
+            if topic == '/davis/left/events' or topic == '/davis/right/events':
+                for event in msg.events:
+                    event_time = event.ts.to_sec()
+                    if current_time - init_time > 1:
+                        done = True
+                        break
+
+                    x, y = event.x, event.y
+                    polarity = 1 if event.polarity else -1
+                    # print(int((event_time - current_time) * 10000), x , y)
+                    add_spike(spike_tensor, int((event_time - current_time) * 1000), y, x, polarity) # simulated time resolution 1ms
+                    activity += 1
+                    if event_time - current_time >= timestep:
+                        action = agent.select_action(state)
+                        actions.append(action)
+                        # Placeholder for reward function
+                        if action == 0:
+                            reward = 0
+                        else:
+                            reward = 1
+                        activity = 0
+
+                        # Update the next state
+                        next_state = spike_tensor.clone()
+
+                        # Update total reward for the episode
+                        episode_rewards += reward
+
+                        agent.buffer.push(state, action, reward, next_state)  # Store transition in replay buffer
+                        
+                        # Optimize the policy network
+                        # agent.optimize_model()
+
+                        sync_msg = Time()
+                        sync_msg.data = rospy.Time.from_sec(current_time)
+                        print(current_time)
+                        sync_pub.publish(sync_msg)  # Publish sync message
+
+                        # Update state and time for the next timestep
+                        state = next_state
+                        spike_tensor_temp = spike_tensor[11:100].clone()
+                        spike_tensor.zero_()
+                        spike_tensor[0:89] = spike_tensor_temp
+                        current_time += 0.01
+                        # print(current_time - init_time)
+
+                if done:
                     break
-
-                x, y = event.x, event.y
-                polarity = 1 if event.polarity else -1
-                # print(int((event_time - current_time) * 10000), x , y)
-                add_spike(spike_tensor, int((event_time - current_time) * 1000), y, x, polarity) # simulated time resolution 1ms
-                activity += 1
-                if event_time - current_time >= timestep:
-                    action = agent.select_action(state)
-                    actions.append(action)
-                    # Placeholder for reward function
-                    if action == 0:
-                        reward = 0
-                    else:
-                        reward = 1
-                    activity = 0
-
-                    # Update the next state
-                    next_state = spike_tensor.clone()
-
-                    # Update total reward for the episode
-                    episode_rewards += reward
-
-                    agent.buffer.push(state, action, reward, next_state)  # Store transition in replay buffer
-                    
-                    # Optimize the policy network
-                    agent.optimize_model()
-
-
-                    # Update state and time for the next timestep
-                    state = next_state
-                    spike_tensor_temp = spike_tensor[11:100].clone()
-                    spike_tensor.zero_()
-                    spike_tensor[0:89] = spike_tensor_temp
-                    current_time += 0.01
-                    # print(current_time - init_time)
-
-            if done:
-                break
 
         # Periodic target network update
         if episode % target_update_freq == 0:
