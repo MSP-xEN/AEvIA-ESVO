@@ -20,7 +20,7 @@
   </node>
 
   <!-- Synchronize both TS processing using an external timer -->
-  <node name="global_timer" pkg="rostopic" type="rostopic" args="pub -s -r 100 /sync std_msgs/Time 'now' " />
+  <node name="global_timer" pkg="rostopic" type="rostopic" args="pub -s -r 50 /sync std_msgs/Time 'now' " />
 
   <!-- Visualization -->
   <node pkg="rqt_gui" type="rqt_gui" name="rqt_gui"

@@ -479,6 +479,7 @@ bool esvo_Mapping::InitializationAtTime(const ros::Time &t)
     vdp_sgm.push_back(dp);
   }
   LOG(INFO) << "********** Initialization (SGM) returns " << vdp_sgm.size() << " points.";
+  std::cout << "********** Initialization (SGM) returns " << vdp_sgm.size() << " points." << std::endl;
   if(vdp_sgm.size() < INIT_SGM_DP_NUM_Threshold_)
     return false;
   // push the "masked" SGM results to the depthFrame

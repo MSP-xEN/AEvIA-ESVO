@@ -18,7 +18,7 @@ RegProblemLM::RegProblemLM(
   bPrint_(false)
 {
   patchSize_ = rpConfigPtr_->patchSize_X_ * rpConfigPtr_->patchSize_Y_;
-  computeJ_G(Eigen::Matrix<double,6,1>::Zero(), J_G_0_);
+  computeJ_G(Eigen::Matrix<double,6,1>::Zero(), J_G_0_); // This is the Jacobian Computation, publish it for python to receive
 }
 
 void RegProblemLM::setProblem(RefFrame* ref, CurFrame* cur, bool bComputeGrad)
